@@ -22,11 +22,7 @@ knitr::opts_chunk$set(message = FALSE)
 
 An R package can be installed by `install.packages` function. Install `tidyverse` if you have not done so. 
 
-```{r, eval=FALSE}
-install.packages('tidyverse')
-```
 ```{r}
-install.packages('tidyverse')
 library(tidyverse)
 ```
 
@@ -70,6 +66,12 @@ df$weekday = wday(df$date)
 df$monthday <- mday(df$date)
 ```
 
+```{r}
+df$month = month(df$date)
+df$weekday = wday(df$date)
+df$monthday <- mday(df$date)
+```
+
 -------
 
 #### 4. Create new variables with `case_when`. 
@@ -86,11 +88,25 @@ df$daily_death <- case_when(
 
 - Create variable `month2` that takes three values: early_month (day of the month from 1-10), mid_month (day of the month from 11-20), and end_month (day of the month > 20).
 
+```{r}
+df$month2 <- case_when(
+  df$monthday <11 ~ 'early_month',
+  df$monthday <=20 ~ 'mid_month',
+  TRUE ~ 'end_month'
+)
+```
+
+
 -------
 
 #### 5. Select function
 
 Use the select function to deselect the column `totalTestsViral` from the data.
+
+```{r}
+df <- select(df, -totalTestsViral)
+```
+
 
 -------
 
@@ -113,6 +129,16 @@ log(16, 2)
 
 ```
 
+```{r}
+x <- c(1:10)
+x %>% sqrt
+x %>% sqrt %>% sum
+x %>% sqrt %>% sum %>% log
+
+16 %>% log2
+```
+
+
 -------
 
 #### 7. Combo 1: group_by + summarise
@@ -133,6 +159,25 @@ df %>%
 
 - Calculate the average number of cases (`positiveIncrease`) by `weekday`
 
+```{r}
+df %>%
+  group_by(dataQualityGrade) %>%
+  summarise(median(positiveIncrease))
+
+df %>%
+  group_by(dataQualityGrade) %>%
+  summarise(max(positiveIncrease))
+
+df %>%
+  group_by(month2) %>%
+  summarise(mean(positiveIncrease))
+
+df%>%
+  group_by(weekday) %>%
+  summarise(mean(positiveIncrease))
+```
+
+
 -------
 
 #### 8. Combo 2: filter + group_by + summarise
@@ -148,8 +193,37 @@ df %>%
 
 - Calculate the total number of new cases for each weekdays in MA
 
+```{r}
+df %>%
+  filter(state=='MA') %>%
+  group_by(weekday) %>%
+  summarise(sum(positiveIncrease))
+```
+
+
 - Calculate the total number of new cases by `month2` in RI and MA.  Is there any difference between the total number of cases for each categories in `month2`? 
+
+```{r}
+df %>%
+  filter(state=='MA' | state=='RI') %>%
+  group_by(month2) %>%
+  summarise(sum(positiveIncrease))
+
+# early month is lowest and end of month is highest
+```
+
 
 - Compare the average number of new cases between New England and the other states?  
 
+```{r}
+df$region <- case_when(
+  (df$state=='MA')|(df$state=='RI')|(df$state=='CT')|(df$state=='NH')|(df$state=='ME')|(df$state=='VT') ~ 'new england',
+  TRUE ~ 'all others'
+)
+
+df %>%
+  group_by(region) %>%
+  summarise(mean(positiveIncrease))
+
+```
 

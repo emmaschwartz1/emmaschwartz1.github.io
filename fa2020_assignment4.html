@@ -378,12 +378,13 @@ summary {
 <div id="install-tidyverse-package" class="section level4">
 <h4>1. Install <code>tidyverse</code> package</h4>
 <p>An R package can be installed by <code>install.packages</code> function. Install <code>tidyverse</code> if you have not done so.</p>
-<pre class="r"><code>install.packages(&#39;tidyverse&#39;)</code></pre>
+<pre class="r"><code>library(tidyverse)</code></pre>
 <hr />
 </div>
 <div id="read-the-data-using-read_csv" class="section level4">
 <h4>2. Read the data using <code>read_csv</code></h4>
 <p>Use <code>read_csv</code> function to import the US Covid 19 data at <a href="https://covidtracking.com/data/download/all-states-history.csv">link</a>. Don’t forget to import <code>tidyverse</code> (library(tidyverse)) so that you can use read_csv.</p>
+<pre class="r"><code>df &lt;- read_csv(&#39;https://covidtracking.com/data/download/all-states-history.csv&#39;)</code></pre>
 <hr />
 </div>
 <div id="fix-the-date-and-ceate-some-new-variables" class="section level4">
@@ -391,6 +392,8 @@ summary {
 <ul>
 <li>Use the following codes to change the type of the <code>date</code> column to <code>date</code>.</li>
 </ul>
+<pre class="r"><code>library(lubridate)
+df$date &lt;- ymd(df$date)</code></pre>
 <pre class="r"><code>library(lubridate)
 df$date &lt;- ymd(df$date)</code></pre>
 <ul>
@@ -402,6 +405,9 @@ df$date &lt;- ymd(df$date)</code></pre>
 df$weekday = wday(df$date)
 
 # day of the month
+df$monthday &lt;- mday(df$date)</code></pre>
+<pre class="r"><code>df$month = month(df$date)
+df$weekday = wday(df$date)
 df$monthday &lt;- mday(df$date)</code></pre>
 <hr />
 </div>
@@ -416,11 +422,17 @@ df$monthday &lt;- mday(df$date)</code></pre>
 <ul>
 <li>Create variable <code>month2</code> that takes three values: early_month (day of the month from 1-10), mid_month (day of the month from 11-20), and end_month (day of the month &gt; 20).</li>
 </ul>
+<pre class="r"><code>df$month2 &lt;- case_when(
+  df$monthday &lt;11 ~ &#39;early_month&#39;,
+  df$monthday &lt;=20 ~ &#39;mid_month&#39;,
+  TRUE ~ &#39;end_month&#39;
+)</code></pre>
 <hr />
 </div>
 <div id="select-function" class="section level4">
 <h4>5. Select function</h4>
 <p>Use the select function to deselect the column <code>totalTestsViral</code> from the data.</p>
+<pre class="r"><code>df &lt;- select(df, -totalTestsViral)</code></pre>
 <hr />
 </div>
 <div id="pipe-operator" class="section level4">
@@ -437,6 +449,16 @@ log(sum(sqrt(x)))
 
 # log base 2 of 16
 log(16, 2)</code></pre>
+<pre class="r"><code>x &lt;- c(1:10)
+x %&gt;% sqrt</code></pre>
+<pre><code>##  [1] 1.000000 1.414214 1.732051 2.000000 2.236068 2.449490 2.645751 2.828427
+##  [9] 3.000000 3.162278</code></pre>
+<pre class="r"><code>x %&gt;% sqrt %&gt;% sum</code></pre>
+<pre><code>## [1] 22.46828</code></pre>
+<pre class="r"><code>x %&gt;% sqrt %&gt;% sum %&gt;% log</code></pre>
+<pre><code>## [1] 3.112104</code></pre>
+<pre class="r"><code>16 %&gt;% log2</code></pre>
+<pre><code>## [1] 4</code></pre>
 <hr />
 </div>
 <div id="combo-1-group_by-summarise" class="section level4">
@@ -451,6 +473,54 @@ log(16, 2)</code></pre>
 <li><p>Calculate the average number of cases (<code>positiveIncrease</code>) by <code>month2</code></p></li>
 <li><p>Calculate the average number of cases (<code>positiveIncrease</code>) by <code>weekday</code></p></li>
 </ul>
+<pre class="r"><code>df %&gt;%
+  group_by(dataQualityGrade) %&gt;%
+  summarise(median(positiveIncrease))</code></pre>
+<pre><code>## # A tibble: 7 x 2
+##   dataQualityGrade `median(positiveIncrease)`
+##   &lt;chr&gt;                                 &lt;dbl&gt;
+## 1 A                                      363 
+## 2 A+                                     437 
+## 3 B                                      212.
+## 4 C                                       25 
+## 5 D                                       11 
+## 6 F                                        0 
+## 7 &lt;NA&gt;                                     2</code></pre>
+<pre class="r"><code>df %&gt;%
+  group_by(dataQualityGrade) %&gt;%
+  summarise(max(positiveIncrease))</code></pre>
+<pre><code>## # A tibble: 7 x 2
+##   dataQualityGrade `max(positiveIncrease)`
+##   &lt;chr&gt;                              &lt;dbl&gt;
+## 1 A                                  15300
+## 2 A+                                  7569
+## 3 B                                  14916
+## 4 C                                   1323
+## 5 D                                   1240
+## 6 F                                    141
+## 7 &lt;NA&gt;                                4812</code></pre>
+<pre class="r"><code>df %&gt;%
+  group_by(month2) %&gt;%
+  summarise(mean(positiveIncrease))</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##   month2      `mean(positiveIncrease)`
+##   &lt;chr&gt;                          &lt;dbl&gt;
+## 1 early_month                     597.
+## 2 end_month                       622.
+## 3 mid_month                       575.</code></pre>
+<pre class="r"><code>df%&gt;%
+  group_by(weekday) %&gt;%
+  summarise(mean(positiveIncrease))</code></pre>
+<pre><code>## # A tibble: 7 x 2
+##   weekday `mean(positiveIncrease)`
+##     &lt;dbl&gt;                    &lt;dbl&gt;
+## 1       1                     554.
+## 2       2                     510.
+## 3       3                     562.
+## 4       4                     601.
+## 5       5                     642.
+## 6       6                     681.
+## 7       7                     634.</code></pre>
 <hr />
 </div>
 <div id="combo-2-filter-group_by-summarise" class="section level4">
@@ -461,10 +531,52 @@ log(16, 2)</code></pre>
   group_by(dataQualityGrade) %&gt;% 
   summarise(mean(positiveIncrease))</code></pre>
 <ul>
-<li><p>Calculate the total number of new cases for each weekdays in MA</p></li>
-<li><p>Calculate the total number of new cases by <code>month2</code> in RI and MA. Is there any difference between the total number of cases for each categories in <code>month2</code>?</p></li>
-<li><p>Compare the average number of new cases between New England and the other states?</p></li>
+<li>Calculate the total number of new cases for each weekdays in MA</li>
 </ul>
+<pre class="r"><code>df %&gt;%
+  filter(state==&#39;MA&#39;) %&gt;%
+  group_by(weekday) %&gt;%
+  summarise(sum(positiveIncrease))</code></pre>
+<pre><code>## # A tibble: 7 x 2
+##   weekday `sum(positiveIncrease)`
+##     &lt;dbl&gt;                   &lt;dbl&gt;
+## 1       1                   17498
+## 2       2                   17324
+## 3       3                   15092
+## 4       4                   10468
+## 5       5                   21743
+## 6       6                   21622
+## 7       7                   21079</code></pre>
+<ul>
+<li>Calculate the total number of new cases by <code>month2</code> in RI and MA. Is there any difference between the total number of cases for each categories in <code>month2</code>?</li>
+</ul>
+<pre class="r"><code>df %&gt;%
+  filter(state==&#39;MA&#39; | state==&#39;RI&#39;) %&gt;%
+  group_by(month2) %&gt;%
+  summarise(sum(positiveIncrease))</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##   month2      `sum(positiveIncrease)`
+##   &lt;chr&gt;                         &lt;dbl&gt;
+## 1 early_month                   45698
+## 2 end_month                     52557
+## 3 mid_month                     49667</code></pre>
+<pre class="r"><code># early month is lowest and end of month is highest</code></pre>
+<ul>
+<li>Compare the average number of new cases between New England and the other states?</li>
+</ul>
+<pre class="r"><code>df$region &lt;- case_when(
+  (df$state==&#39;MA&#39;)|(df$state==&#39;RI&#39;)|(df$state==&#39;CT&#39;)|(df$state==&#39;NH&#39;)|(df$state==&#39;ME&#39;)|(df$state==&#39;VT&#39;) ~ &#39;new england&#39;,
+  TRUE ~ &#39;all others&#39;
+)
+
+df %&gt;%
+  group_by(region) %&gt;%
+  summarise(mean(positiveIncrease))</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   region      `mean(positiveIncrease)`
+##   &lt;chr&gt;                          &lt;dbl&gt;
+## 1 all others                      650.
+## 2 new england                     180.</code></pre>
 </div>
 
 
