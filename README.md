@@ -10,4 +10,5 @@
 
 [Assignment 5](fa2020_assignment5.html)
 
+[Assignemtn 6](fa2020_assignment6.html)
 
