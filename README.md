@@ -12,3 +12,5 @@
 
 [Assignment 6](fa2020_assignment6.html)
 
+[Assignment 8](fa2020_assignment8.html)
+
