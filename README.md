@@ -12,5 +12,9 @@
 
 [Assignment 6](fa2020_assignment6.html)
 
+[Assignment 7](fa2020_assignment7.html)
+
+[Plot](plot.png)
+
 [Assignment 8](fa2020_assignment8.html)
 
