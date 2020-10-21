@@ -1,0 +1,114 @@
+
+---
+output: 
+  html_document:
+  pdf_document: default
+  word_document: default
+title: "Assignment 11: Predictive Modeling - Part 2"
+---
+
+***How to do it?***: 
+
+- Open the Rmarkdown file of this assignment ([link](fa2020_assignment11.Rmd)) in Rstudio. 
+
+- Right under each **question**, insert  a code chunk (you can use the hotkey `Ctrl + Alt + I` to add a code chunk) and code the solution for the question. 
+
+- `Knit` the rmarkdown file (hotkey: `Ctrl + Alt + K`) to export an html.  
+
+-  Publish the html file to your Githiub Page. 
+
+***Submission***: Submit the link on Github of the assignment to Blackboard.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE)
+```
+
+
+-------
+
+1. Install the package `mlbench` and use the follows to import the data
+
+```{r}
+library(mlbench)
+data(PimaIndiansDiabetes)
+df <- PimaIndiansDiabetes
+
+library(caret)
+```
+
+- Set seed to be 2020. 
+- The target variable is `diabetes`
+- Partition the data into 80% training and 20% testing.  
+
+```{r}
+set.seed(2020)
+splitIndex <- createDataPartition(df$diabetes,p = .80,
+                                  list = FALSE)
+df_train <- df[ splitIndex,]
+df_test <- df[-splitIndex,]
+```
+
+-------
+
+2. Tuning Decision Tree:  Use cross-validation with 10 k-folds to find the maxdepth with the greatest accuracy. Plot the accuracy associated with different maxdepths against the maxdepths. The range to search for maxdepth is from 1 to 10. 
+
+```{r}
+tuneGrid = expand.grid(maxdepth = 1:10)
+trControl = trainControl(method = "cv",
+                         number = 10)
+
+tree <- train(diabetes~., data = df_train,
+                        method = "rpart2",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(tree)
+print(tree)
+```
+
+-------
+
+3. Make the final decision to select the maxdepth for your decision tree.  Is your selected maxdepth the same as the maxdepth found in 2. 
+
+```{r}
+#chosen maxdepth is same as found in 2 because it has the highest accuracy
+
+```
+
+-------
+
+4. Calculate the accuracy of your decision tree (the decision tree with your selected maxdepth in 3) on the test data. 
+
+```{r}
+pred <- predict(tree, df_test)
+
+cm <- confusionMatrix(data = pred, reference = df_test$diabetes, positive = "pos")
+
+cm$overall[1]
+```
+
+-------
+
+5. Redo 2-4 with an alternative method to cross-validation. 
+
+```{r}
+tuneGrid = expand.grid(maxdepth = 1:10)
+trControl = trainControl(method = "LGOCV",
+                         number = 10)
+
+tree2 <- train(diabetes~., data = df_train,
+                        method = "rpart2",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(tree2)
+print(tree2)
+
+pred2 <- predict(tree2, df_test)
+
+cm2 <- confusionMatrix(data = pred2, reference = df_test$diabetes, positive = "pos")
+
+cm2$overall[1]
+
+```
+
