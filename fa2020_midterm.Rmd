@@ -1,0 +1,552 @@
+ 
+---
+output: 
+  html_document:
+  pdf_document: default
+  word_document: default
+title: "Fall 2020 - Math 421 - Midterm"
+---
+
+-------
+
+# Instruction
+
+The midterm has two components: the Rmarkdown notebook (html) and the presentation.  The notebook and the presentation file are due Nov 26. We will do the presentation in class 
+
+**The notebook:** The notebook should be created using `rmarkdown` (like other assignments). The notebook should have a title. 
+
+
+**The Presentation:** Present your results in 5-10 minutes. To make the presentation using Rmarkdown, do the follows: 
+
+    - In Rstudio -> File -> New File -> R markdown
+    
+    - In the left panel, click to Presentation -> Click OK
+    
+    - Now you have an Rmarkdown that can be knitted to be a html presentation 
+
+**What to present**:
+
+  - Present Part 2 - Visualization
+  
+  - Present Question Question 4, 5 and 6 in Part 3.  
+  
+  - Present any errors/challenges you run into and how you fix/overcome them. 
+
+**Data:**  
+
+The data for the mid-term project is the Rhode Island Department of Health Hospital Discharge Data.  Each row of the data presents a patient. 
+
+Link: https://drive.google.com/open?id=15QNBf6YYKocK2nNIfpKDer58kQnCPNZJ 
+
+-------
+
+## I. Data Wranggling
+
+1. Download the data file `hdd0318cy.sas7bdat`.  
+
+2. Use `read_sas` in library `haven` to read the data. 
+
+```{r}
+library(haven)
+df <- read_sas("C:/Users/student/Documents/GitHub/emmaschwartz1.github.io/hdd0318cy.sas7bdat")
+```
+
+3. Filter the data to have only patients of the year 2018 (`yod==2018`)
+```{r}
+library(tidyverse)
+df <- df %>% filter(yod==18)
+```
+
+4. Select to work with only following variables: 
+
+```{r, eval=FALSE}
+                      "yod", "payfix","pay_ub92","age",  
+                      "sex","raceethn","provider","moa", 
+                      "yoa","mod","admtype", "asource" , 
+                      "preopday" ,"los", "service" , "icu","ccu",    
+                      "dispub92", "payer"  ,"drg","trandb", 
+                      "randbg","randbs","orr", "anes","seq",   
+                      "lab","dtest", "ther","blood","phar", 
+                      "other","patcon","bwght","total","tot" ,  
+                      "ecodub92","b_wt","pt_state","diag_adm","ancilar" ,
+                      "campus","er_fee","er_chrg","er_mode","obs_chrg",
+                      "obs_hour","psycchrg","nicu_day"
+```
+```{r}
+df <- df %>% select(yod, payfix,pay_ub92,age,  
+                      sex,raceethn,provider,moa, 
+                      yoa,mod,admtype, asource , 
+                      preopday ,los, service , icu,ccu,    
+                      dispub92,payer ,drg,trandb, 
+                      randbg,randbs,orr, anes,seq,   
+                      lab,dtest, ther,blood,phar, 
+                      other,patcon,bwght,total,tot ,  
+                      ecodub92,b_wt,pt_state,diag_adm,ancilar ,
+                      campus,er_fee,er_chrg,er_mode,obs_chrg,
+                      obs_hour,psycchrg,nicu_day)
+```
+ 
+
+*Notice*:  You may want to save the current data to your computer for easy access later.  To save the data file use `write_csv(df, 'midterm.csv')`, for example.  
+
+```{r}
+write_csv(df, "midterm.csv")
+```
+
+5. What are variables that have missing values?
+
+```{r}
+colSums(is.na(df))
+```
+
+6. Remove all variables with missing values
+```{r}
+df$payfix <- NULL
+df$preopday <- NULL
+df$obs_hour <- NULL
+df$nicu_day <- NULL
+```
+
+7. Refer to the data description in the file `HDD2015-18cy6-20-19.docx`, which variable recording the month of admission?, which variable recording the month of discharge?
+
+```{r}
+#month of admission is MOA and month of discharge is MOD
+```
+
+8. Which month admitted the most number of patients? Which month admitted the most number of male patients?
+
+```{r}
+table1 <- table(df$moa)
+table
+#October has the greatest number of admitted patients
+
+df1 <- df %>% filter(sex=="1") 
+table2 <- table(df1$moa)
+table2
+#October has the greatest number of admitted male patients
+```
+
+9. Which month has the most number of teenage female patients?
+
+```{r}
+df1 <- df %>% filter(sex=="2") %>%
+  filter(age > 12 & age < 20)
+table3 <-table(df1$moa)
+table3
+#March has the greatest number of admitted teenage female patients
+```
+
+10. Which provider has the most number of female patients in October? 
+
+```{r}
+df1 <- df %>% filter(moa==10 & sex =="2")
+table4 <- table(df1$provider)
+table4
+#Provider 7205 (Rhode Island Hospital) has the greatest number of female patients in October
+```
+
+11. Is female patients older than male patients, on average? 
+
+```{r}
+df %>% group_by(sex) %>%
+  summarize(mean(age))
+#No, male patients are older than female patients on average by a little more than half a year
+```
+
+12. Calculate the average age of patients by months. Which month has the oldest patients on average age?
+
+```{r}
+df %>% group_by(moa) %>%
+  summarize(mean(age))
+#January has the oldest patients on average
+```
+
+13. What is the name of the provider that has the highest total charge?
+
+```{r}
+df %>% group_by(provider) %>%
+  summarise(max(tot))
+#Provider 7214 (Women and Infants) has the highest total charge
+```
+
+14. What is the name of the provider that has the least total charge for teenage male on average?
+
+```{r}
+df %>% filter(sex=="1" & age <20 & age >12) %>%
+  group_by(provider) %>%
+  summarise(mean(tot))
+#Provider 7206 (Roger Williams) has the least total charge for teenage male on average
+```
+
+15. Calculate the length of stays by races.  Which race has the longest length of stays on average?
+
+```{r}
+df %>% group_by(raceethn) %>%
+  summarise(mean(los))
+#Unknown has the longest length of stays on average, but American Indian, not Hispanic has the longest other than that
+```
+
+16. On average, how much a 20 year-old male white get charged for staying 1 day?
+
+```{r}
+df %>% filter(sex=="1" & age==20 & raceethn==1 & los==1) %>%
+  summarise(mean(tot))
+#15,319.56 on average
+```
+
+-------
+
+## II. Data Visualization
+
+Continue with the data from part I. 
+
+1. Provides at least 10 meaningful plots. Comments on the plots. All plots should have title, caption, appropriate labels on x and y-axis
+
+```{r}
+library(ggplot2)
+
+df %>% filter(age < 13) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = moa), fill = "#FF91CA")+
+  labs(x = 'Month of Admission',
+       y = 'Number of Patients',
+       title = 'Number of Children Admitted By Month',
+       caption = 'Less children under 13 were admitted in the summer months, but overall there is not a strong pattern') +
+  scale_x_continuous(breaks = seq(1,12, by=1)) +
+  ggsave("plot1.png")
+  
+```
+```{r}
+df %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = los, y = tot))+
+  geom_smooth(mapping = aes(x = los, y = tot), color = "#FF91CA")+
+  labs(x = 'Length of Stay in Days',
+       y = 'Total Charge in Dollars',
+       title = 'Length of Stay versus Total Charge',
+       caption = 'They are positively correlated, but very long or very expensive stays are uncommon')+
+  ggsave("plot2.png")
+```
+
+```{r}
+df %>%
+  ggplot()+
+  geom_bar(mapping = aes(x = provider), fill = "#FF91CA")+
+  labs(x = 'Provider',
+       y = 'Number of Patients',
+       title = 'Number of Patients per Provider',
+       caption = 'Rhode Island Hospital has the most patients by far; Bradley has the least')+
+  ggsave("plot3.png")
+```
+
+```{r}
+df %>% filter(provider==7205) %>%
+  group_by(age) %>%
+  summarise(average_los = mean(los)) %>%
+  ggplot() +
+  geom_point(mapping = aes(x = age, y = average_los))+
+  geom_smooth(mapping = aes(x = age, y = average_los), color = "#FF91CA")+
+  labs(x = 'Age',
+       y = 'Average Length of Stay',
+       title = 'Length of Stay by Age at Rhode Island Hospital',
+       caption = 'There is less variability of length of stay in patients over 50 years old')+
+  ggsave("plot4.png")
+  
+```
+
+```{r}
+df %>% filter(provider==7206 | provider==7209 | provider == 7216) %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x = age), bins = 10, color = "#FF91CA", fill = "#FFA5C2") +
+  facet_wrap(~provider)+
+  labs(x = "Age",
+       y = "Number of Patients",
+       title = "Patient Ages at Roger Williams, South County, and Butler",
+       caption = "South County appears to have a lot of infant patients; Roger Williams is the most symmetrical around the mean")+
+  ggsave("plot5.png")
+```
+
+```{r}
+df %>% ggplot() +
+  geom_bar(mapping = aes(x = moa, fill = sex), position = 'dodge')+
+  labs(x = "Month",
+       y = "Number of Patients",
+       title = "Number of Males vs Females Admitted Every Month",
+       caption = "There are consistently more females admitted each month")+
+  ggsave("plot6.png")
+```
+
+```{r}
+df %>% filter(age>65) %>%
+  group_by(age) %>%
+  summarise(average_los = mean(los)) %>%
+  ggplot() +
+  geom_point(mapping = aes(x = age, y = average_los))+
+  geom_smooth(mapping = aes(x = age, y = average_los), color = "#FF91CA")+
+  labs(x = "Age",
+       y = "Averarge Length of Stay",
+       title = "Average Length of Stay for Senior Citizens",
+       caption = "Looking at senior citizens, as they get older, their length of stay shortens")+
+  ggsave("plot7.png")
+```
+
+```{r}
+df %>% 
+  ggplot() +
+  geom_bar(mapping = aes(x = provider, fill = sex), position = 'dodge')+
+  labs(x = "Provider",
+       y = "Number of Patients",
+       title = "Amount of Male vs Female Patients by Provider",
+       caption = "Provider 7214 is Women and Infants, which explains the large gap in gender there")+
+  ggsave("plot8.png")
+```
+
+```{r}
+df %>%
+  group_by(raceethn) %>%
+  summarise(average_tot = mean(tot)) %>%
+  ggplot() +
+  geom_col(mapping = aes(x = raceethn, y = average_tot), fill = "#FF91CA")+
+  labs(x = "Race/Ethnicity",
+       y = "Average Total Charge",
+       title = "Average Total Charge by Race",
+       caption = "Asian has the lowest average total charge, besides unknown")+
+  ggsave("plot9.png")
+  
+```
+
+```{r}
+df %>% group_by(age) %>%
+  summarise(average_tot = mean(tot)) %>%
+  ggplot() +
+  geom_line(mapping = aes(x = age, y = average_tot), color = "#FF91CA")+
+  labs(x = "Age",
+       y = "Average Total Charge",
+       title = "Average Total Charge by Age",
+       caption = "Total cost appears to be highest for teenagers")+
+  ggsave("plot10.png")
+```
+
+2. Make an animation
+
+```{r}
+library(gganimate)
+df %>% group_by(los) %>%
+  summarise(average_tot = mean(tot)) %>%
+  ggplot(aes(x = los, y = average_tot)) +
+  geom_line()+
+  geom_point(size = 3)+
+  transition_reveal(los)+
+  labs(x = "Length of Stay",
+       y = "Average Total Charge",
+       title = "Average Total Charge by Length of Stay",
+       caption = "While positively correlated, there are a lot of spikes throughout")
+```
+
+-------
+
+## III. Predictive Models
+
+Continue with the data from part I. Use the follows as the target and input variables: 
+
+*Target Variable*: Create the target variable taking value of 
+
+  - `low` if the total charge of a patient (`tot`) is smaller than the median of the total charge, and
+
+  - `high` otherwise. 
+
+*Input Variables*:
+
+  - "age","sex","raceethn","provider","moa","mod","admtype","campus", 'los'
+  
+-------
+
+1. Use `filter` function to filter out rows where `raceethn==''` or `admtype==''`. Make sure all the categorical variables are factor, numeric variables are numeric. Set Training : Testing Split = 10 : 90 
+
+```{r}
+library(tidyverse)
+
+df$target <- case_when(
+  df$tot < median(df$tot) ~ 'low',
+  TRUE ~ 'high'
+)
+
+df <- df %>% select(age, sex, raceethn, provider, moa, mod, admtype, campus, los, target)
+df <- df %>% drop_na(raceethn, admtype)
+
+
+library(caret)
+
+set.seed(2020)
+splitIndex <- createDataPartition(df$target, p = 0.90,
+                                  list = FALSE)
+df_train <- df[splitIndex, ]
+df_test <- df[-splitIndex, ]
+
+
+```
+
+2. Train a decision tree using `rpart`.  Plot the decision tree. Plot the variable importance ranked by the tree. 
+
+```{r}
+library(rpart)
+tree_model <- rpart(target ~., data = df_train,
+                    control = rpart.control(maxdepth = 3))
+library(rattle)
+fancyRpartPlot(tree_model)
+
+tree_model$variable.importance
+barplot(tree_model$variable.importance)
+
+```
+
+3. Using caret for this question. Set `Training Control` to be: Use Cross-Validation of 5 folds across all models.  Train & tune at least 3 different models (i.e. three different values for `method=` in the train function of caret).  Plot the hyper-parameter tuning plots for each model. 
+
+```{r}
+tuneGrid = expand.grid(maxdepth = 2:9)
+trControl = trainControl(method = "cv",
+                         number = 5)
+
+tree <- train(target~., data = df_train,
+                        method = "rpart2",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(tree)
+
+
+tuneGrid = expand.grid(nIter = 2:5)
+trControl = trainControl(method = "cv",
+                         number = 5)
+
+library(caret)
+
+logit <- train(target~., data = df_train,
+                        method = "LogitBoost",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(logit)
+
+  
+trControl = trainControl(method = "cv",
+                         number = 5)
+tuneGrid = expand.grid(maxdepth = 2:5,
+                       mstop = 3)
+
+blackboost <- train(target~., data = df_train,
+                        method = "blackboost",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(blackboost)
+```
+
+4. Plot the comparison of the models in 3. 
+
+```{r}
+results <- resamples(list(tree = tree,
+                          logit = logit,
+                          blackboost = blackboost))
+bwplot(results)
+```
+
+5. What is your final selection for the model? Test the accuracy of your final model on the test data. 
+
+```{r}
+pred <- predict(logit, df_test)
+cm <- confusionMatrix(data = factor(pred), reference = factor(df_test$target), positive = "low")
+cm$overall[1]
+
+```
+
+6. Create another `target` variable (binary), decide the input variables and redo 1 to 5. 
+
+```{r}
+library(tidyverse)
+
+df <- read_csv("midterm.csv")
+df$target <- case_when(
+  df$los < 7 ~ 'short',
+  TRUE ~ 'long'
+)
+
+df <- df %>% select(age, sex, raceethn, provider, moa, mod, admtype, campus, target)
+df <- df %>% drop_na(raceethn, admtype)
+
+
+library(caret)
+
+set.seed(2020)
+splitIndex <- createDataPartition(df$target, p = 0.90,
+                                  list = FALSE)
+df_train <- df[splitIndex, ]
+df_test <- df[-splitIndex, ]
+
+```
+
+```{r}
+library(rpart)
+tree_model <- rpart(target ~., data = df_train,
+                    control = rpart.control(maxdepth = 3))
+library(rattle)
+fancyRpartPlot(tree_model)
+
+tree_model$variable.importance
+barplot(tree_model$variable.importance)
+```
+
+```{r}
+tuneGrid = expand.grid(maxdepth = 2:8)
+trControl = trainControl(method = "cv",
+                         number = 5)
+
+tree <- train(target~., data = df_train,
+                        method = "rpart2",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(tree)
+
+
+tuneGrid = expand.grid(nIter = 2:5)
+trControl = trainControl(method = "cv",
+                         number = 5)
+
+library(caret)
+
+logit <- train(target~., data = df_train,
+                        method = "LogitBoost",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(logit)
+
+  
+trControl = trainControl(method = "cv",
+                         number = 5)
+tuneGrid = expand.grid(maxdepth = 2:5,
+                       mstop = 3)
+
+blackboost <- train(target~., data = df_train,
+                        method = "blackboost",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(blackboost)
+```
+
+```{r}
+results <- resamples(list(tree = tree,
+                          logit = logit,
+                          blackboost = blackboost))
+bwplot(results)
+```
+
+```{r}
+pred <- predict(logit, df_test)
+cm <- confusionMatrix(data = factor(pred), reference = factor(df_test$target), positive = "short")
+cm$overall[1]
+```
+
+-------
