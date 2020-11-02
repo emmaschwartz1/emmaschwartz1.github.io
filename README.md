@@ -29,3 +29,5 @@
 [Assignment 13](fa2020_assignment13.html)
 
 [Midterm](fa2020_midterm.html)
+
+[Midterm Slides](slide.html)

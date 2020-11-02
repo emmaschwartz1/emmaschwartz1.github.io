@@ -1,0 +1,385 @@
+---
+title: "Midterm"
+author: "Emma Schwartz"
+date: "10/25/2020"
+output:
+  ioslides_presentation: default
+  beamer_presentation: default
+  slidy_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+```
+
+## Children Admitted by Month
+
+```{r, message=FALSE}
+
+library(haven)
+df <- read_sas("C:/Users/student/Documents/GitHub/emmaschwartz1.github.io/hdd0318cy.sas7bdat")
+library(tidyverse)
+df <- df %>% filter(yod==18)
+df <- df %>% select(yod, payfix,pay_ub92,age,  
+                      sex,raceethn,provider,moa, 
+                      yoa,mod,admtype, asource , 
+                      preopday ,los, service , icu,ccu,    
+                      dispub92,payer ,drg,trandb, 
+                      randbg,randbs,orr, anes,seq,   
+                      lab,dtest, ther,blood,phar, 
+                      other,patcon,bwght,total,tot ,  
+                      ecodub92,b_wt,pt_state,diag_adm,ancilar ,
+                      campus,er_fee,er_chrg,er_mode,obs_chrg,
+                      obs_hour,psycchrg,nicu_day)
+df$payfix <- NULL
+df$preopday <- NULL
+df$obs_hour <- NULL
+df$nicu_day <- NULL
+
+library(ggplot2)
+
+df %>% filter(age < 13) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = moa), fill = "#FF91CA")+
+  labs(x = 'Month of Admission',
+       y = 'Number of Patients',
+       title = 'Number of Children Admitted By Month',
+       caption = 'Less children under 13 were admitted in the summer months, but overall there is not a strong pattern') +
+  scale_x_continuous(breaks = seq(1,12, by=1))
+```
+
+## Length of Stay and Total Charge
+
+```{r, message=FALSE}
+df %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = los, y = tot))+
+  geom_smooth(mapping = aes(x = los, y = tot), color = "#FF91CA")+
+  labs(x = 'Length of Stay in Days',
+       y = 'Total Charge in Dollars',
+       title = 'Length of Stay versus Total Charge',
+       caption = 'They are positively correlated, but very long or very expensive stays are uncommon')
+```
+
+## Patients by Provider
+
+```{r, message=FALSE}
+df %>%
+  ggplot()+
+  geom_bar(mapping = aes(x = provider), fill = "#FF91CA")+
+  labs(x = 'Provider',
+       y = 'Number of Patients',
+       title = 'Number of Patients per Provider',
+       caption = 'Rhode Island Hospital has the most patients by far; Bradley has the least')
+```
+
+## Length of Stay by Age
+
+```{r, message=FALSE}
+df %>% filter(provider==7205) %>%
+  group_by(age) %>%
+  summarise(average_los = mean(los)) %>%
+  ggplot() +
+  geom_point(mapping = aes(x = age, y = average_los))+
+  geom_smooth(mapping = aes(x = age, y = average_los), color = "#FF91CA")+
+  labs(x = 'Age',
+       y = 'Average Length of Stay',
+       title = 'Length of Stay by Age at Rhode Island Hospital',
+       caption = 'There is less variability of length of stay in patients over 50 years old')
+```
+
+## Patient Ages
+
+```{r, message=FALSE}
+df %>% filter(provider==7206 | provider==7209 | provider == 7216) %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x = age), bins = 10, color = "#FF91CA", fill = "#FFA5C2") +
+  facet_wrap(~provider)+
+  labs(x = "Age",
+       y = "Number of Patients",
+       title = "Patient Ages at Roger Williams, South County, and Butler",
+       caption = "South County appears to have a lot of infant patients; Roger Williams is the most symmetrical around the mean")
+```
+
+## Admitted Patients by Gender and Month
+
+```{r, message=FALSE}
+df %>% ggplot() +
+  geom_bar(mapping = aes(x = moa, fill = sex), position = 'dodge')+
+  labs(x = "Month",
+       y = "Number of Patients",
+       title = "Number of Males vs Females Admitted Every Month",
+       caption = "There are consistently more females admitted each month")
+```
+
+## Length of Stay by Age
+
+```{r, message=FALSE}
+df %>% filter(age>65) %>%
+  group_by(age) %>%
+  summarise(average_los = mean(los)) %>%
+  ggplot() +
+  geom_point(mapping = aes(x = age, y = average_los))+
+  geom_smooth(mapping = aes(x = age, y = average_los), color = "#FF91CA")+
+  labs(x = "Age",
+       y = "Averarge Length of Stay",
+       title = "Average Length of Stay for Senior Citizens",
+       caption = "Looking at senior citizens, as they get older, their length of stay shortens")
+```
+
+## Patients by Gender and Provider
+
+```{r, message=FALSE}
+df %>% 
+  ggplot() +
+  geom_bar(mapping = aes(x = provider, fill = sex), position = 'dodge')+
+  labs(x = "Provider",
+       y = "Number of Patients",
+       title = "Amount of Male vs Female Patients by Provider",
+       caption = "Provider 7214 is Women and Infants, which explains the large gap in gender there")
+```
+
+## Total Charges by Race
+
+```{r, message=FALSE}
+df %>%
+  group_by(raceethn) %>%
+  summarise(average_tot = mean(tot)) %>%
+  ggplot() +
+  geom_col(mapping = aes(x = raceethn, y = average_tot), fill = "#FF91CA")+
+  labs(x = "Race/Ethnicity",
+       y = "Average Total Charge",
+       title = "Average Total Charge by Race",
+       caption = "Asian has the lowest average total charge, besides unknown")
+```
+
+## Total Charges by Age
+
+```{r, message=FALSE}
+df %>% group_by(age) %>%
+  summarise(average_tot = mean(tot)) %>%
+  ggplot() +
+  geom_line(mapping = aes(x = age, y = average_tot), color = "#FF91CA")+
+  labs(x = "Age",
+       y = "Average Total Charge",
+       title = "Average Total Charge by Age",
+       caption = "Total cost appears to be highest for teenagers")
+```
+
+## Animation: Total Charge vs Length of Stay
+
+```{r, message=FALSE}
+library(gganimate)
+df %>% group_by(los) %>%
+  summarise(average_tot = mean(tot)) %>%
+  ggplot(aes(x = los, y = average_tot)) +
+  geom_line()+
+  geom_point(size = 3)+
+  transition_reveal(los)+
+  labs(x = "Length of Stay",
+       y = "Average Total Charge",
+       title = "Average Total Charge by Length of Stay",
+       caption = "While positively correlated, there are a lot of spikes throughout")
+```
+
+## Predictive Models: Model 1
+
+```{r, message=FALSE}
+
+library(tidyverse)
+
+df$target <- case_when(
+  df$tot < median(df$tot) ~ 'low',
+  TRUE ~ 'high'
+)
+
+df <- df %>% select(age, sex, raceethn, provider, moa, mod, admtype, campus, los, target)
+df <- df %>% drop_na(raceethn, admtype)
+
+
+library(caret)
+set.seed(2020)
+splitIndex <- createDataPartition(df$target, p = 0.90,
+                                  list = FALSE)
+df_train <- df[splitIndex, ]
+df_test <- df[-splitIndex, ]
+library(rpart)
+tree_model <- rpart(target ~., data = df_train,
+                    control = rpart.control(maxdepth = 3))
+library(rattle)
+
+tuneGrid = expand.grid(maxdepth = 2:9)
+trControl = trainControl(method = "cv",
+                         number = 5)
+
+tree <- train(target~., data = df_train,
+                        method = "rpart2",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(tree)
+```
+
+## Predictive Models: Model 2
+
+```{r, message=FALSE}
+tuneGrid = expand.grid(nIter = 2:5)
+trControl = trainControl(method = "cv",
+                         number = 5)
+
+library(caret)
+
+logit <- train(target~., data = df_train,
+                        method = "LogitBoost",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(logit)
+```
+
+## Predictive Models: Model 3
+
+```{r, message=FALSE}
+trControl = trainControl(method = "cv",
+                         number = 5)
+tuneGrid = expand.grid(maxdepth = 2:5,
+                       mstop = 3)
+
+blackboost <- train(target~., data = df_train,
+                        method = "blackboost",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(blackboost)
+```
+
+## Predictive Models: Comparison
+
+```{r, message=FALSE}
+results <- resamples(list(tree = tree,
+                          logit = logit,
+                          blackboost = blackboost))
+bwplot(results)
+```
+
+## Predictive Models: Final Selection
+
+```{r, message=FALSE}
+pred <- predict(logit, df_test)
+cm <- confusionMatrix(data = factor(pred), reference = factor(df_test$target), positive = "low")
+cm$overall[1]
+```
+
+## More Predictive Models: Model 1
+
+```{r, message=FALSE}
+library(tidyverse)
+
+library(haven)
+df <- read_sas("C:/Users/student/Documents/GitHub/emmaschwartz1.github.io/hdd0318cy.sas7bdat")
+library(tidyverse)
+df <- df %>% filter(yod==18)
+df <- df %>% select(yod, payfix,pay_ub92,age,  
+                      sex,raceethn,provider,moa, 
+                      yoa,mod,admtype, asource , 
+                      preopday ,los, service , icu,ccu,    
+                      dispub92,payer ,drg,trandb, 
+                      randbg,randbs,orr, anes,seq,   
+                      lab,dtest, ther,blood,phar, 
+                      other,patcon,bwght,total,tot ,  
+                      ecodub92,b_wt,pt_state,diag_adm,ancilar ,
+                      campus,er_fee,er_chrg,er_mode,obs_chrg,
+                      obs_hour,psycchrg,nicu_day)
+df$payfix <- NULL
+df$preopday <- NULL
+df$obs_hour <- NULL
+df$nicu_day <- NULL
+df$target <- case_when(
+  df$los < 7 ~ 'short',
+  TRUE ~ 'long'
+)
+
+df <- df %>% select(age, sex, raceethn, provider, moa, mod, admtype, campus, target)
+df <- df %>% drop_na(raceethn, admtype)
+
+
+library(caret)
+
+set.seed(2020)
+splitIndex <- createDataPartition(df$target, p = 0.90,
+                                  list = FALSE)
+df_train <- df[splitIndex, ]
+df_test <- df[-splitIndex, ]
+library(rpart)
+tree_model <- rpart(target ~., data = df_train,
+                    control = rpart.control(maxdepth = 3))
+tuneGrid = expand.grid(maxdepth = 2:8)
+trControl = trainControl(method = "cv",
+                         number = 5)
+
+tree <- train(target~., data = df_train,
+                        method = "rpart2",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(tree)
+```
+
+## More Predictive Models: Model 2
+
+```{r, message=FALSE}
+tuneGrid = expand.grid(nIter = 2:5)
+trControl = trainControl(method = "cv",
+                         number = 5)
+
+library(caret)
+
+logit <- train(target~., data = df_train,
+                        method = "LogitBoost",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(logit)
+```
+
+## More Predictive Models: Model 3
+
+```{r, message=FALSE}
+trControl = trainControl(method = "cv",
+                         number = 5)
+tuneGrid = expand.grid(maxdepth = 2:5,
+                       mstop = 3)
+
+blackboost <- train(target~., data = df_train,
+                        method = "blackboost",
+                        trControl = trControl,
+                        tuneGrid = tuneGrid)
+
+plot(blackboost)
+```
+
+## More Predictive Models: Comparison
+
+```{r, message=FALSE}
+results <- resamples(list(tree = tree,
+                          logit = logit,
+                          blackboost = blackboost))
+bwplot(results)
+```
+
+## More Predictive Models: Final Selection
+
+```{r, message=FALSE}
+pred <- predict(logit, df_test)
+cm <- confusionMatrix(data = factor(pred), reference = factor(df_test$target), positive = "short")
+cm$overall[1]
+```
+
+## Challenges
+
+- Figuring out what errors mean
+
+- Waiting for code to run
+
+- Deciding how to look at the data
