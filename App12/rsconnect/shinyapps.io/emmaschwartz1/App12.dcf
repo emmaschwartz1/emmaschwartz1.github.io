@@ -1,0 +1,12 @@
+name: App12
+title: App12
+username:
+account: emmaschwartz1
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3292568
+bundleId: 3898251
+url: https://emmaschwartz1.shinyapps.io/App12/
+when: 1606195882.52794
+asMultiple: FALSE
+asStatic: FALSE

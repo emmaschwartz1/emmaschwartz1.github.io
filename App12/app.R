@@ -1,0 +1,138 @@
+
+#load packages and data
+library(tidyverse)
+library(shiny)
+
+d = read_csv("data.csv")
+d <- d %>% filter(city == "Seattle"|city =="Newcastle"|city=="Kent"|city=="Preston")
+variables_names = names(d)
+
+#create navbar ui
+ui <- navbarPage("Navbar",
+           tabPanel("Numerical",
+                    
+                    sidebarLayout(
+                      sidebarPanel(
+                        
+                        checkboxGroupInput(inputId = "floors", label = "Select number of floors",
+                                           choices = names(table(d$floors)), inline = TRUE),
+
+                        selectInput(
+                            inputId ="var1",
+                            label = "Select a Numeric Variable",
+                            choices = variables_names, selected = "price"),
+      
+                       sliderInput(inputId = "sqft_living",
+                            "Select Square Foot Area Range:",
+                            min = min(d$sqft_living, na.rm=TRUE),
+                            max = max(d$sqft_living, na.rm=TRUE),
+                            value = c(0,6000)),
+      
+                        radioButtons(inputId = "plot_choice", 
+                                     label = h3("Select Plot:"),
+                                     choices = c("Histogram Plot" = "histogram",
+                                       "Boxplot" = "boxplot"),
+                                     selected = 'histogram')
+      
+    ),
+                      
+                      mainPanel(
+                        plotOutput(outputId = 'show_plot')
+                      )
+                    )
+           ),
+           
+           
+           tabPanel("Numerical and Categorical",
+                    
+                    sidebarLayout(
+                      sidebarPanel(
+                        
+                        checkboxGroupInput(inputId = "floors", label = "Select number of floors",
+                                           choices = names(table(d$floors)), inline = TRUE),
+                        
+                        selectInput(
+                          inputId ="var2",
+                          label = "Select a Numerical Variable",
+                          choices = variables_names, selected = "price"
+                        ),
+                        selectInput(
+                          inputId ="var3",
+                          label = "Select a Categorical Variable",
+                          choices = variables_names, selected = "city"
+                        ),
+                        sliderInput(inputId = "yr_built",
+                            "Select Year Built Range:",
+                            min = min(d$yr_built, na.rm=TRUE),
+                            max = max(d$yr_built, na.rm=TRUE),
+                            value = c(1900, 2014)),
+      
+                        radioButtons(inputId = "plot", 
+                                     label = h3("Select Plot:"),
+                                     choices = c("Density Plot" = "density",
+                                       "Boxplot" = "boxplot"),
+                                     selected = 'density')
+                      ),
+                      
+                      mainPanel(
+                        plotOutput(outputId = 'show_plot2')
+                      )
+                    )
+           )
+)
+
+# server
+server <- function(input, output) {
+  
+#first tab  
+  output$show_plot <- renderPlot({
+    
+    v1 = input$var1
+   
+    d <- d %>% filter(floors %in% input$floors, sqft_living >input$sqft_living[1], 
+                      sqft_living<input$sqft_living[2])
+    
+    library(ggplot2)
+    if(input$plot_choice == 'histogram')
+    {
+      ggplot(d, aes(x = d[[v1]]))+
+        geom_histogram()+
+        labs(x = v1)
+    }
+    
+    else
+    {
+      ggplot(d, aes(x = d[[v1]]))+
+        geom_boxplot()+
+        labs(x = v1)
+    }
+  })
+#second tab  
+  output$show_plot2 <- renderPlot({
+    
+    v2 = input$var2
+    v3 = input$var3
+   
+    d <- d %>% filter(floors %in% input$floors, yr_built >input$yr_built[1], 
+                      yr_built<input$yr_built[2])
+    
+    library(ggplot2)
+    if(input$plot == 'density')
+    {
+      ggplot(d, aes(x = d[[v2]], color = d[[v3]]))+
+        geom_density()+
+        labs(x = v2, color = v3)
+    }
+    
+    else
+    {
+      ggplot(d, aes(y = d[[v2]], x = d[[v3]]))+
+        geom_boxplot()+
+        labs(y = v2, x = v3)
+    }
+  })
+  
+}
+# app
+shinyApp(ui = ui, server = server)
+
