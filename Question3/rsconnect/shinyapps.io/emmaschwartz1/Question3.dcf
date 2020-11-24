@@ -1,0 +1,12 @@
+name: Question3
+title: Question3
+username:
+account: emmaschwartz1
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3289425
+bundleId: 3896115
+url: https://emmaschwartz1.shinyapps.io/Question3/
+when: 1606154438.98234
+asMultiple: FALSE
+asStatic: FALSE

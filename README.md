@@ -33,3 +33,5 @@
 [Midterm Slides](slide.html)
 
 [Assignment 14](fa2020_assignment14.html)
+
+[Final](fa2020_final.html)

@@ -1,0 +1,12 @@
+name: Apps
+title: Apps
+username:
+account: emmaschwartz1
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3289117
+bundleId: 3895931
+url: https://emmaschwartz1.shinyapps.io/Apps/
+when: 1606151332.1595
+asMultiple: FALSE
+asStatic: FALSE
