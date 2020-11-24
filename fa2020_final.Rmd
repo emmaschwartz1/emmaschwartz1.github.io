@@ -91,7 +91,7 @@ Notice: that you can only run 5 apps on shinyapps.io.  If you are running out of
 
 - Here is an example: https://fa20.shinyapps.io/a9_markdown/
   
-[App 4](app4.Rmd)
+[App 4](app4.html)
 
 -------
 
@@ -101,7 +101,7 @@ Write a shiny app create a plot for the titanic dataset.  The user inputs two va
 
 [Similar Apps](https://fall20.shinyapps.io/app2_1/) and [Codes](gganimate/shiny_fa20/a2_1.R)
 
-[App 5](app5.Rmd)
+[App 5](app5.html)
 
 -------
 
@@ -111,7 +111,7 @@ Write a shiny app create plots for the titanic dataset. The user inputs two vari
 
 [Similar Apps](https://fa20.shinyapps.io/app2_2/) and [Codes](gganimate/shiny_fa20_2/a2_2.R)
 
-[App 6](app6.Rmd)
+[App 6](app6.html)
 
 -------
 
@@ -121,7 +121,7 @@ Write a shiny app create a plot for the titanic dataset. The user inputs two var
 
 [Similar Apps](https://fa20.shinyapps.io/app2_3/) and [Codes](gganimate/shiny_fa20_2/a2_3.R)
 
-[App 7](app7.Rmd)
+[App 7](app7.html)
 
 -------
 
@@ -129,7 +129,7 @@ Write a shiny app create a plot for the titanic dataset. The user inputs two var
 
 Write a shiny app create a plot for the titanic dataset. Make uses of `selectInput`, `sliderInput`, `radioButtons`, and `checkboxGroupInput`. 
 
-[App 8](app8.Rmd)
+[App 8](app8.html)
 
 -------
 
@@ -139,7 +139,7 @@ Use the below data to write this shiny app: https://fall20.shinyapps.io/app9/.  
 
 The data: https://covidtracking.com/data/download/all-states-history.csv
 
-[App 9](app9.Rmd)
+[App 9](app9.html)
 
 -------
 
@@ -149,7 +149,7 @@ Make uses of `selectInput`, `sliderInput`, `radioButtons`, and `checkboxGroupInp
 
 The data: https://covidtracking.com/data/download/all-states-history.csv
 
-[App 10](app10.Rmd)
+[App 10](app10.html)
 
 -------
 
@@ -157,7 +157,7 @@ The data: https://covidtracking.com/data/download/all-states-history.csv
 
 Write a shiny app on own selected data.  Make uses of `selectInput`, `sliderInput`, `radioButtons`, and `checkboxGroupInput`. 
 
-[App 11](app11.Rmd)
+[App 11](app11.html)
 
 
 -------
